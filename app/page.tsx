@@ -113,20 +113,13 @@ console.log("Fetched branch data", data);
 
   const position: LatLngExpression = [28.3949, 84.124];
 
-  if (branchStatuses.length === 0) {
-    return (
-      <div>
-         <Header onAddBranch={handleAddBranch} />
-        <p className="text-center p-4">Loading branches...</p>
-      </div>
-    );
-  }
+  
 
 
 
   return (
     <div>
-      <Header onAddBranch={handleAddBranch} />
+      {/* <Header onAddBranch={handleAddBranch} /> */}
 
       <div className="flex mt-4 mx-4 gap-4 h-[1000px]">
         {/* Left Sidebar */}
