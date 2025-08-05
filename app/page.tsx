@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Header from "./components/Header";
+// import Header from "./components/Header";
 
 import dynamic from "next/dynamic";
 
@@ -38,54 +38,14 @@ function createIcon(L:any,isUp: boolean) {
   });
 }
 
-// type BranchData = {
-//   id: string;
-//   name: string;
-//   coords: [number, number];
-//   status: "up" | "down" | "unknown";
-//   ipAddress: string;
-//   pingHistory?: { alive: boolean }[];
-//   history: { alive: boolean; checkedAt: string }[];
-// };
 
 export default function Home() {
   const [branchStatuses, setBranchStatuses] = useState<Branch[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
-
+  const position: LatLngExpression = [28.3949, 84.124];
   const [L, setLeaflet] = useState<any>(null);
-type LatLngExpression = [number, number];
 
-  const handleAddBranch = (newBranch: Branch) => {
-    setBranchStatuses(prev => [newBranch, ...prev]); 
-    setSelectedBranch(newBranch);
-  };
-
-  const fetchBranchesWithStatus = async () => {
-    try {
-      const res = await fetch("/api/branch-status");
-      console.log("Hitting API");
-      if (!res.ok) throw new Error("Failed to fetch branches with status");
-      console.log("API hitted")
-      const data = await res.json();
-      console.log("Fetching branches..")
-      console.log("Fetched branches:", data); 
-      console.log("Received request to /api/branch-status");
-// After fetching data:
-console.log("Fetched branch data", data);
-
-
-      setBranchStatuses(data);
-      console.log("Branches count:", data.length);
-
-      setSelectedBranch(data[0] || null);
-    } catch (error) {
-      toast.error((error as Error).message || "Error loading branches");
-    }
-  };
-
-  useEffect(() => {
-    fetchBranchesWithStatus();
-  }, []);
+  type LatLngExpression = [number, number];
 
   useEffect(() => {
   (async () => {
@@ -101,17 +61,9 @@ console.log("Fetched branch data", data);
   })();
 }, []);
 
-  useEffect(() => {
-    if (branchStatuses.length === 0) return;
+  
 
-    const interval = setInterval(() => {
-      fetchBranchesWithStatus();
-    }, 5 * 60 * 1000); // 5 minutes
-
-    return () => clearInterval(interval);
-  }, [branchStatuses.length]);
-
-  const position: LatLngExpression = [28.3949, 84.124];
+ 
 
   
 
@@ -122,12 +74,7 @@ console.log("Fetched branch data", data);
       {/* <Header onAddBranch={handleAddBranch} /> */}
 
       <div className="flex mt-4 mx-4 gap-4 h-[1000px]">
-        {/* Left Sidebar */}
-        <LeftSidebar
-          branchStatuses={branchStatuses}
-          selectedBranch={selectedBranch}
-          setSelectedBranch={setSelectedBranch}
-        />
+        <LeftSidebar></LeftSidebar>
 
         {/* Middle - Maps */}
         <div className="flex-1 bg-gray-100 p-4 rounded-lg space-y-6 overflow-auto">
@@ -208,7 +155,7 @@ console.log("Fetched branch data", data);
         </div>
 
         {/* Right Side */}
-        <RightSide selectedBranch={selectedBranch} />
+        {/* <RightSide selectedBranch={selectedBranch} /> */}
       </div>
     </div>
   );

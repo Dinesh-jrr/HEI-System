@@ -5,20 +5,19 @@ import DarkModeToggle from "./DarkMode";
 
 const Navbar = () => {
   return (
-    <nav className="bg-green-600 text-white px-15 py-6  flex items-center justify-between sticky-top z-0" style={{ backgroundColor: "#199ccd" }}>
+    <nav className="text-white  py-2 flex flex-row  items-center justify-center gap-10 sticky-top z-0 shadow-[0_8px_6px_-2px_rgba(0,0,0,0.3)]" style={{ backgroundColor: "#009acc" }}>
       {/* Left side: Logo */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center w-[200px] gap-2   flex justify-center">
         <img src=" " alt="Logo" className="h-10 w-10 rounded-full" />
-        <h1 className="text-xl font-bold">HEI</h1>
+        <h1 className="text-[25px] font-bold">HEI</h1>
       </div>
       {/* middle section */}
-        <div className="flex flex-col justify-center items-center gap-2"><h1 className="text-5xl text-black text-bold">Himalayan Everest Insurance Company</h1>
-        <h2 className="text-[25px] text-black">NOC updates of every branches</h2>
+        <div className=""><h2 className="text-[25px] w-[800px] text-center text-bold">HEI NOC DASHBOARD</h2>
         </div>
         <div>
         </div>
         {/* right section  */}
-        <div>
+        <div className=" w-[200px] flex justify-center">
           <DarkModeToggle></DarkModeToggle>
         </div>
     </nav>

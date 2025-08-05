@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.534.0",
     "mongoose": "^8.17.0",

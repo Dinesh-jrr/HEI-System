@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SunIcon, MoonIcon } from "@heroicons/react/24/solid";
 
 export default function DarkModeToggle() {
   const [darkMode, setDarkMode] = useState(false);
@@ -30,25 +31,22 @@ export default function DarkModeToggle() {
   };
 
   return (
-    <div className="flex items-center gap-3">
-      <button
-        type="button"
-        aria-pressed={darkMode}
-        onClick={toggleDarkMode}
-        className={`relative inline-flex items-center h-6 rounded-full w-12 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-          darkMode ? "bg-green-500" : "bg-gray-300"
-        }`}
-      >
-        <span
-          className={`inline-block w-5 h-5 transform bg-white rounded-full shadow-md transition-transform ${
-            darkMode ? "translate-x-6" : "translate-x-1"
+    <button
+      onClick={toggleDarkMode}
+      className="p-2 rounded-full bg-gray-200 dark:bg-gray-800 transition-colors duration-300"
+    >
+      <div className="relative w-6 h-6">
+        <SunIcon
+          className={`absolute inset-0 h-6 w-6 text-yellow-400 transform transition-all duration-500 ${
+            darkMode ? "opacity-0 rotate-90" : "opacity-100 rotate-0"
           }`}
         />
-      </button>
-
-      <span className="select-none text-gray-900 dark:text-gray-100 font-medium">
-        {darkMode ? "Dark Mode" : "Light Mode"}
-      </span>
-    </div>
+        <MoonIcon
+          className={`absolute inset-0 h-6 w-6 text-gray-200 transform transition-all duration-500 ${
+            darkMode ? "opacity-100 rotate-0" : "opacity-0 -rotate-90"
+          }`}
+        />
+      </div>
+    </button>
   );
 }
