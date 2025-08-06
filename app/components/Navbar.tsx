@@ -6,20 +6,20 @@ import DarkModeToggle from "./DarkMode";
 const Navbar = () => {
   return (
     <nav className="text-white  py-2 flex flex-row  items-center justify-center gap-10 sticky-top z-0 shadow-[0_8px_6px_-2px_rgba(0,0,0,0.3)]" style={{ backgroundColor: "#009acc" }}>
-      {/* Left side: Logo */}
+{/*       
       <div className="flex items-center w-[200px] gap-2   flex justify-center">
         <img src=" " alt="Logo" className="h-10 w-10 rounded-full" />
         <h1 className="text-[25px] font-bold">HEI</h1>
       </div>
-      {/* middle section */}
+      
         <div className=""><h2 className="text-[25px] w-[800px] text-center text-bold">HEI NOC DASHBOARD</h2>
         </div>
         <div>
         </div>
-        {/* right section  */}
+        
         <div className=" w-[200px] flex justify-center">
           <DarkModeToggle></DarkModeToggle>
-        </div>
+        </div> */}
     </nav>
   );
 };
