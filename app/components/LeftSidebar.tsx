@@ -1,10 +1,107 @@
+"use client";
 import { useState } from "react";
+import Image from "next/image";
+import { Globe } from "lucide-react";
 
 export default function LeftSidebar() {
+  const [logs] = useState([
+    {
+      id: 1,
+      title: "MVPower CCTV DVR Remote Code Injection",
+      time: "10:47:21",
+      from: "Hattisar",
+      to: "Surkhet",
+    },
+    {
+      id: 2,
+      title: "Mcp-remote Command Injection",
+      time: "10:47:21",
+      from: "Head Office",
+      to: "Biratnagar",
+    },
+    {
+      id: 3,
+      title: "Memcached Web-Servers Network Attack",
+      time: "10:47:20",
+      from: "Hetauda",
+      to: "Lalitpur",
+    },
+    {
+      id: 4,
+      title: "Generic IoT Vulnerabilities",
+      time: "10:47:20",
+      from: "Pokhara",
+      to: "Birgunj",
+    },{
+      id: 5,
+      title: "MVPower CCTV DVR Remote Code Injection",
+      time: "10:47:21",
+      from: "Hattisar",
+      to: "Surkhet",
+    },{
+      id: 6,
+      title: "MVPower CCTV DVR Remote Code Injection",
+      time: "10:47:21",
+      from: "Hattisar",
+      to: "Surkhet",
+    },{
+      id: 7,
+      title: "MVPower CCTV DVR Remote Code Injection",
+      time: "10:47:21",
+      from: "Hattisar",
+      to: "Surkhet",
+    },{
+      id: 8,
+      title: "MVPower CCTV DVR Remote Code Injection",
+      time: "10:47:21",
+      from: "Hattisar",
+      to: "Surkhet",
+    },{
+      id: 9,
+      title: "MVPower CCTV DVR Remote Code Injection",
+      time: "10:47:21",
+      from: "Hattisar",
+      to: "Surkhet",
+    },{
+      id: 10,
+      title: "MVPower CCTV DVR Remote Code Injection",
+      time: "10:47:21",
+      from: "Hattisar",
+      to: "Surkhet",
+    },
+  ]);
 
   return (
-    <div className="w-[15%] border-2 border-green-500 text-white p-4 rounded-lg h-full overflow-y-auto">
-      <h3>Connections Logs</h3>
+    <div className="w-[20%] text-white rounded-lg h-full flex flex-col items-center shadow-xl ">
+      {/* Logo */}
+      <div className="flex justify-center items-center py-6">
+        <Image src="/logo.png" alt="logo" width={100} height={100} />
+      </div>
+
+      {/* Logs Section */}
+      <div className="w-full px-4 py-4 flex flex-col gap-3 overflow-y-auto ">
+        <h3 className="text-[#009acc] text-[25px]">Connection Logs</h3>
+        <div className="flex flex-col gap-3 max-h-[450px] overflow-y-auto pr-2 ">
+        {logs.map((log) => (
+          <div
+            key={log.id}
+            className="flex items-start gap-3 border-1 border-[#009acc] p-3 rounded-md hover:bg-[#222] transition"
+          >
+            <div className="bg-[#009acc]  h-8 w-10 rounded-full flex items-center justify-center">
+              <Globe className="text-black" size={18} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[12px] ">{log.title}</span>
+              <span className="text-xs text-gray-400">
+                {log.time} <span className="text-[#009acc] ">{log.from}</span> →{" "}
+                <span className="text-[#009acc] ">{log.to}</span>
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
+    </div>
+
   );
 }

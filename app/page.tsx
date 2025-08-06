@@ -30,6 +30,7 @@ import LeftSidebar from "./components/LeftSidebar";
 import RightSide from "./components/RightSide";
 import { Branch } from "@/types";
 import MapComponent from "./components/Map";
+import RightSidebar from "./components/RightSide";
 
 function createIcon(L: any, isUp: boolean) {
   const iconElement = isUp ? (
@@ -54,9 +55,9 @@ export default function Home() {
     <div>
       {/* <Header onAddBranch={handleAddBranch} /> */}
 
-      <div className="flex mt-4 mx-4 gap-4 h-[800px]">
+      <div className="flex  gap-1 h-[730px]">
         <LeftSidebar></LeftSidebar>
-        <div className="flex-1 bg-black-100/80 p-4 rounded-lg space-y-6 overflow-auto ">
+        <div className="flex-1 bg-black-100/80 border-2  p-4 rounded-lg space-y-6 overflow-auto ">
           <h2 className="text-[40px] text-white w-full text-center text-bold">
             HEI NOC DASHBOARD
           </h2>
@@ -64,7 +65,7 @@ export default function Home() {
         </div>
 
         {/* Right Side */}
-        {/* <RightSide selectedBranch={selectedBranch} /> */}
+        <RightSidebar></RightSidebar>
       </div>
     </div>
   );
