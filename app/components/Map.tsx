@@ -45,7 +45,7 @@ const LeafletMap = React.memo(
     <MapContainer
     center={[28.3949, 84.1240]} // Center of Nepal
   zoom={7.5}
-  style={{ height: "600px", width: "100%", }}
+  style={{ height: "600px", width: "100%",borderRadius:"3px" }}
   zoomControl={false}
    maxBounds={[
     [26.347, 80.058],

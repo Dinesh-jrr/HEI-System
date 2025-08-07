@@ -57,7 +57,7 @@ export default function Home() {
 
       <div className="flex  gap-1 h-[730px]">
         <LeftSidebar></LeftSidebar>
-        <div className="flex-1 bg-black-100/80 border-2  p-4 rounded-lg space-y-6 overflow-auto">
+        <div className="flex-1 bg-black-100/80 p-4  space-y-6 overflow-auto">
           <h2 className="text-[30px] text-white w-full text-center mt-2 text-bold">
             NETWORK OPERATION CENTER
           </h2>
