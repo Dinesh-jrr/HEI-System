@@ -24,3 +24,33 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+/* Scrollbar styling for elements with class 'your-scrollbar-class' */
+.your-scrollbar-class::-webkit-scrollbar {
+  width: 2px; /* width of scrollbar */
+}
+
+.your-scrollbar-class::-webkit-scrollbar-thumb {
+  background-color: #009acc; /* color of the draggable thumb */
+  border-radius: 1px;        /* rounded corners of thumb */
+}
+
+.your-scrollbar-class::-webkit-scrollbar-track {
+  background-color: transparent; /* track background */
+}
+
+/* global */
+body::-webkit-scrollbar {
+  width: 4px;
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: white;
+  border-radius: 5px;
+}
+
+body::-webkit-scrollbar-track {
+  background: #111;
+}
+

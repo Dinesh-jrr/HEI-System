@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Globe } from "lucide-react";
 
@@ -69,23 +69,55 @@ export default function LeftSidebar() {
       from: "Hattisar",
       to: "Surkhet",
     },
+    {
+      id: 11,
+      title: "MVPower CCTV DVR Remote Code Injection",
+      time: "10:47:21",
+      from: "Hattisar",
+      to: "Surkhet",
+    },
   ]);
+  const scrollRef=useRef<HTMLDivElement>(null);
+  const [isPaused,setIsPaused]=useState(false);
 
+// Auto-scroll logic
+  useEffect(() => {
+    const scrollInterval = setInterval(() => {
+      if (scrollRef.current && !isPaused) {
+        const container = scrollRef.current;
+        container.scrollTop += 1; // scroll speed
+
+        // Reset when reaching bottom
+        if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
+          container.scrollTop = 0;
+        }
+      }
+    }, 50); // adjust speed
+
+    return () => clearInterval(scrollInterval);
+  }, [isPaused]);
+  
   return (
     <div className="w-[20%] text-white rounded-lg h-full flex flex-col items-center shadow-xl ">
       {/* Logo */}
       <div className="flex justify-center items-center py-6">
-        <Image src="/logo.png" alt="logo" width={100} height={100} />
+        <Image src="/logo.png" alt="logo" width={70} height={70} />
+        <p className="font-bold">Himalayan Everest Insurance</p>
       </div>
 
       {/* Logs Section */}
       <div className="w-full px-4 py-4 flex flex-col gap-3 overflow-y-auto ">
         <h3 className="text-[#009acc] text-[25px]">Connection Logs</h3>
-        <div className="flex flex-col gap-3 max-h-[450px] overflow-y-auto pr-2 ">
+        <div 
+        ref={scrollRef}
+        onMouseEnter={()=>setIsPaused(true)}
+        onMouseDown={()=>setIsPaused(false)}
+        className="flex flex-col gap-3 max-h-[450px] overflow-y-auto pr-2 your-scrollbar-class ">
+
         {logs.map((log) => (
           <div
             key={log.id}
-            className="flex items-start gap-3 border-1 border-[#009acc] p-3 rounded-md hover:bg-[#222] transition"
+            className="flex items-start gap-3 p-3 rounded-md cursor-pointer transition"
           >
             <div className="bg-[#009acc]  h-8 w-10 rounded-full flex items-center justify-center">
               <Globe className="text-black" size={18} />
