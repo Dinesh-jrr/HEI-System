@@ -1,20 +1,20 @@
-import { useEffect } from "react";
-import { useMap } from "react-leaflet";
-import L from "leaflet";
+// import { useEffect } from "react";
+// import { useMap } from "react-leaflet";
+// import L from "leaflet";
 
-function FitNepalBounds({ data }) {
-  const map = useMap();
+// function FitNepalBounds({ data }) {
+//   const map = useMap();
 
-  useEffect(() => {
-    if (!map || !data) return;
+//   useEffect(() => {
+//     if (!map || !data) return;
 
-    const geojsonLayer = L.geoJSON(data);
-    const bounds = geojsonLayer.getBounds();
+//     const geojsonLayer = L.geoJSON(data);
+//     const bounds = geojsonLayer.getBounds();
 
-    map.fitBounds(bounds, { padding: [2, 2] }); 
-  }, [map, data]);
+//     map.fitBounds(bounds, { padding: [2, 2] }); 
+//   }, [map, data]);
 
-  return null;
-}
+//   return null;
+// }
 
-export default FitNepalBounds;
+// export default FitNepalBounds;

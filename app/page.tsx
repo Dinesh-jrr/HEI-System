@@ -59,7 +59,7 @@ export default function Home() {
         <LeftSidebar></LeftSidebar>
         <div className="flex-1 bg-black-100/80 p-4  space-y-6 overflow-auto">
           <h2 className="text-[30px] text-white w-full text-center mt-2 text-bold">
-            NETWORK OPERATION CENTER
+            HEI NOC DASHBOARD
           </h2>
           <div className="h-6000px w-full">
               <MapComponent></MapComponent>

@@ -5,6 +5,7 @@ import nepalBoundary from "../../data/nepal-states.json";
 
 export default function MaskLayer({ L }) {
   const map = useMap();
+  
 
   useEffect(() => {
     if (!map || !L || !nepalBoundary) return;
@@ -58,7 +59,7 @@ export default function MaskLayer({ L }) {
     const nepalOutlineLayer = new L.GeoJSON(nepalBoundary, {
       style: {
         color: "#00ffff",
-        weight: 0.3,
+        weight: 0.8,
         fillOpacity: 0,
       },
       interactive: false,

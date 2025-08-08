@@ -18,14 +18,12 @@ export async function POST(req) {
   // Check if branch with same ipAddress, latitude, and longitude exists
   const existingBranch = await Branch.findOne({
     ipAddress,
-    latitude,
-    longitude,
   });
 
 
   if (existingBranch) {
     return new Response(
-      JSON.stringify({ error: "Branch with this IP and location already exists" }),
+      JSON.stringify({ error: "Branch with this IP already exists" }),
       { status: 409 } // 409 Conflict
     );
   }
