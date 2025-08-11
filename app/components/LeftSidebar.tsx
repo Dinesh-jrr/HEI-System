@@ -2,138 +2,105 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Globe } from "lucide-react";
+import { format } from "date-fns";
+
+interface PingLog {
+  ipAddress: string;
+  latency: number;
+  packetLoss: string;
+  checkedAt?: string;
+  time?: string;
+}
 
 export default function LeftSidebar() {
-  const [logs] = useState([
-    {
-      id: 1,
-      title: "MVPower CCTV DVR Remote Code Injection",
-      time: "10:47:21",
-      from: "Hattisar",
-      to: "Surkhet",
-    },
-    {
-      id: 2,
-      title: "Mcp-remote Command Injection",
-      time: "10:47:21",
-      from: "Head Office",
-      to: "Biratnagar",
-    },
-    {
-      id: 3,
-      title: "Memcached Web-Servers Network Attack",
-      time: "10:47:20",
-      from: "Hetauda",
-      to: "Lalitpur",
-    },
-    {
-      id: 4,
-      title: "Generic IoT Vulnerabilities",
-      time: "10:47:20",
-      from: "Pokhara",
-      to: "Birgunj",
-    },{
-      id: 5,
-      title: "MVPower CCTV DVR Remote Code Injection",
-      time: "10:47:21",
-      from: "Hattisar",
-      to: "Surkhet",
-    },{
-      id: 6,
-      title: "MVPower CCTV DVR Remote Code Injection",
-      time: "10:47:21",
-      from: "Hattisar",
-      to: "Surkhet",
-    },{
-      id: 7,
-      title: "MVPower CCTV DVR Remote Code Injection",
-      time: "10:47:21",
-      from: "Hattisar",
-      to: "Surkhet",
-    },{
-      id: 8,
-      title: "MVPower CCTV DVR Remote Code Injection",
-      time: "10:47:21",
-      from: "Hattisar",
-      to: "Surkhet",
-    },{
-      id: 9,
-      title: "MVPower CCTV DVR Remote Code Injection",
-      time: "10:47:21",
-      from: "Hattisar",
-      to: "Surkhet",
-    },{
-      id: 10,
-      title: "MVPower CCTV DVR Remote Code Injection",
-      time: "10:47:21",
-      from: "Hattisar",
-      to: "Surkhet",
-    },
-    {
-      id: 11,
-      title: "MVPower CCTV DVR Remote Code Injection",
-      time: "10:47:21",
-      from: "Hattisar",
-      to: "Surkhet",
-    },
-  ]);
-  const scrollRef=useRef<HTMLDivElement>(null);
-  const [isPaused,setIsPaused]=useState(false);
+  const [logs, setLogs] = useState<PingLog[]>([]);
 
-// Auto-scroll logic
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const scrollInterval = setInterval(() => {
-      if (scrollRef.current && !isPaused) {
-        const container = scrollRef.current;
-        container.scrollTop += 1; // scroll speed
-
-        // Reset when reaching bottom
-        if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
-          container.scrollTop = 0;
+    async function fetchLogs() {
+      try {
+        const res = await fetch("http://localhost:3000/api/pingHistory");
+        if (!res.ok) {
+          console.error("Failed to fetch logs", await res.text());
+          return;
         }
+        const data = await res.json();
+        setLogs(data);
+      } catch (err) {
+        console.error("Error fetching logs:", err);
       }
-    }, 50); // adjust speed
+    }
+    fetchLogs();
+  }, []);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    // Start scroll at the bottom when logs change
+    container.scrollTop = container.scrollHeight;
+
+    const scrollInterval = setInterval(() => {
+      if (!container) return;
+
+      // Scroll up 1px
+      container.scrollTop -= 1;
+
+      // If reached top, reset to bottom
+      if (container.scrollTop <= 0) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 50);
 
     return () => clearInterval(scrollInterval);
-  }, [isPaused]);
-  
+  }, [logs]);
+
   return (
-    <div className="w-[20%] text-white rounded-lg h-full flex flex-col items-center shadow-xl ">
-      {/* Logo */}
+    <div className="w-[23%] text-white rounded-lg h-full flex flex-col items-center shadow-xl ">
       <div className="flex justify-center items-center py-6">
         <Image src="/logo.png" alt="logo" width={70} height={70} />
         <p className="font-bold">Himalayan Everest Insurance</p>
       </div>
 
-      {/* Logs Section */}
       <div className="w-full px-4 py-4 flex flex-col gap-3 overflow-y-auto ">
         <h3 className="text-[#009acc] text-[25px]">Connection Logs</h3>
-        <div 
-        ref={scrollRef}
-        onMouseEnter={()=>setIsPaused(true)}
-        onMouseDown={()=>setIsPaused(false)}
-        className="flex flex-col gap-3 max-h-[450px] overflow-y-auto pr-2 your-scrollbar-class ">
-
-        {logs.map((log) => (
-          <div
-            key={log.id}
-            className="flex items-start gap-3 p-3 rounded-md cursor-pointer transition"
-          >
-            <div className="bg-[#009acc]  h-8 w-10 rounded-full flex items-center justify-center">
-              <Globe className="text-black" size={18} />
+        <div
+          ref={scrollRef}
+          className="flex flex-col gap-3 max-h-[450px] overflow-y-auto pr-2 your-scrollbar-class w-full"
+          // Removed pause on hover to keep continuous scroll
+        >
+          {logs.map((log, index) => (
+            <div
+              key={`${log.ipAddress}-${index}`}
+              className="flex items-start gap-3 p-3 rounded-md cursor-pointer transition"
+            >
+              <div className="bg-[#009acc] h-8 w-10 rounded-full flex items-center justify-center">
+                <Globe className="text-black" size={18} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[12px] ">
+                  Pinging <strong>{log.ipAddress}</strong> with latency{" "}
+                  <strong>{log.latency} ms</strong>
+                </span>
+                <span className="text-xs text-gray-400 gap-1 flex justify-between w-full">
+                  <span>
+                    {log.checkedAt || log.time
+                      ? format(
+                          new Date(log.checkedAt || log.time || ""),
+                          "dd MMM yyyy, hh:mm a"
+                        )
+                      : ""}
+                  </span>
+                  <span className="text-[#09aacc]">
+                    Loss: <strong>{log.packetLoss}</strong>
+                  </span>
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[12px] ">{log.title}</span>
-              <span className="text-xs text-gray-400">
-                {log.time} <span className="text-[#009acc] ">{log.from}</span> →{" "}
-                <span className="text-[#009acc] ">{log.to}</span>
-              </span>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
-    </div>
-
   );
 }

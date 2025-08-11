@@ -6,15 +6,19 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "start:ping": "node scripts/pingCaller.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@turf/turf": "^7.2.0",
+    "date-fns": "^4.1.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.534.0",
     "mongoose": "^8.17.0",
     "next": "15.4.4",
+    "node-cron": "^4.2.1",
+    "node-fetch": "^3.3.2",
     "ping": "^0.4.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",

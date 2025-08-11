@@ -61,7 +61,7 @@ export default function Home() {
           <h2 className="text-[30px] text-white w-full text-center mt-2 text-bold">
             HEI NOC DASHBOARD
           </h2>
-          <div className="h-6000px w-full">
+          <div className="h-600px w-full">
               <MapComponent></MapComponent>
           </div>
           

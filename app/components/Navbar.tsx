@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import DarkModeToggle from "./DarkMode";
+// import DarkModeToggle from "./DarkMode";
 
 const Navbar = () => {
   return (
-    <nav className="text-white  py-2 flex flex-row  items-center justify-center gap-10 sticky-top z-0 shadow-[0_8px_6px_-2px_rgba(0,0,0,0.3)]" style={{ backgroundColor: "#009acc" }}>
+    <nav className="text-white  py-2 flex flex-row  items-center justify-center gap-10 sticky-top z-0 shadow-[0_8px_6px_-2px_rgba(0,0,0,0.3)]" style={{ backgroundColor: "#ee0c5d" }}>
 {/*       
       <div className="flex items-center w-[200px] gap-2   flex justify-center">
         <img src=" " alt="Logo" className="h-10 w-10 rounded-full" />

@@ -4,6 +4,9 @@ import dynamic from "next/dynamic";
 import { Branch } from "@/types";
 import MaskLayer from "../components/MaskLayer";
 
+
+const Tooltip = dynamic(() => import("react-leaflet").then((mod) => mod.Tooltip), { ssr: false });
+
 const CircleMarker = dynamic(
   () => import("react-leaflet").then((m) => m.CircleMarker),
   { ssr: false }
@@ -27,6 +30,8 @@ const GeoJSON = dynamic(() => import("react-leaflet").then((m) => m.GeoJSON), {
   ssr: false,
 });
 
+const sourceCoords: LatLngExpression = [27.7172,85.324]; 
+
 type LatLngExpression = [number, number];
 type Ping = {
   id: string;
@@ -34,6 +39,19 @@ type Ping = {
   to: LatLngExpression;
   progress: number;
 };
+
+function createSourceIcon(L: any) {
+  return new L.DivIcon({
+    html: `<div style="
+      width: 14px; height: 14px; background: #09aacc; /* gold/yellow */
+      border-radius: 50%; box-shadow: 0 0 10px #09aacc; border: 2px solid white;">
+    </div>`,
+    className: "",
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+}
+
 
 function createIcon(L: any, isUp: boolean) {
   const color = isUp ? "rgba(0, 255, 0, 1)" : "rgba(255, 0, 0, 1)";
@@ -108,6 +126,15 @@ const LeafletMap = React.memo(
       />
 
       <MaskLayer L={L}></MaskLayer>
+
+      <Marker position={sourceCoords} icon={createSourceIcon(L)}>
+  <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent>
+    <div className=" text-black font-semibold whitespace-nowrap">
+      Main Server
+    </div>
+  </Tooltip>
+</Marker>
+
 
       {/* Branch markers */}
       {branches.map(({ id, name, coords, status }) => (
@@ -202,64 +229,59 @@ useEffect(() => {
 
   
 
-  useEffect(() => {
-  const interval = setInterval(async () => {
-    if (branches.length < 2) return;
+ useEffect(() => {
+  if (branches.length === 0) return;
 
-    const fromIndex = Math.floor(Math.random() * branches.length);
-    let toIndex = Math.floor(Math.random() * branches.length);
-    while (toIndex === fromIndex)
-      toIndex = Math.floor(Math.random() * branches.length);
+  // fixed source location
 
-    const fromBranch = branches[fromIndex];
-    const toBranch = branches[toIndex];
+  const pingAllBranches = async () => {
+    for (const branch of branches) {
+      const pingId = `${branch.id}-${Date.now()}`;
 
-    const pingId = `${Date.now()}`;
-    // Add a ping with pending status to show animation start
-    setPings((prev) => [
-      ...prev,
-      {
-        id: pingId,
-        from: fromBranch.coords,
-        to: toBranch.coords,
-        progress: 0,
-        status: "pending",
-      },
-    ]);
+      // Start ping animation from source to branch
+      setPings((prev) => [
+        ...prev,
+        {
+          id: pingId,
+          from: sourceCoords,
+          to: branch.coords,
+          progress: 0,
+          status: "pending",
+        },
+      ]);
 
-    try {
-      // Call your backend ping API
-      const res = await fetch("http://localhost:3000/api/ping", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ipAddress:toBranch.ipAddress} ), 
-      });
+      try {
+        const res = await fetch("/api/ping", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ipAddress: branch.ipAddress }),
+        });
+        const data = await res.json();
 
-      const data = await res.json();
-
-      if (data.success) {
-        // Mark ping as up and store latency if any
+        // Update ping status and latency for animation
         setPings((prev) =>
           prev.map((p) =>
-            p.id === pingId ? { ...p, status: "up", latency: data.latency } : p
+            p.id === pingId ? { ...p, status: data.status, latency: data.latency } : p
           )
         );
-      } else {
-        // Mark ping as down if API says fail
+      } catch (error) {
         setPings((prev) =>
           prev.map((p) => (p.id === pingId ? { ...p, status: "down" } : p))
         );
       }
-    } catch (error) {
-      // Mark ping as down on fetch error
-      setPings((prev) =>
-        prev.map((p) => (p.id === pingId ? { ...p, status: "down" } : p))
-      );
+
+      // Optional: Add a small delay between pings to stagger animations
+      await new Promise((resolve) => setTimeout(resolve, 5000000)); // 0.5 sec delay
     }
-  }, 20000); // ping every 5 seconds
+  };
+
+  // Run immediately and then every 5 minutes
+  pingAllBranches();
+  const interval = setInterval(pingAllBranches, 350000); // 5 minutes
 
   return () => clearInterval(interval);
 }, [branches]);
+
 
 
   // Animate pings

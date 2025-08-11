@@ -14,22 +14,32 @@ export async function POST(req) {
   }
 
   try {
-    const result = await ping.promise.probe(ipAddress, { timeout: 50000 }); // timeout in seconds
+    const result = await ping.promise.probe(ipAddress, { timeout: 10, min_reply: 5 }); // timeout in seconds
 
-    // Save result in DB (optional)
+    // Convert strings to numbers or null
+    const latencyNum = result.avg === "unknown" ? null : Number(result.avg);
+    const packetLossNum = Number(result.packetLoss);
+
+    // Save latency as latency (not time) and convert packetLoss to number
     const pingData = await PingResult.create({
       ipAddress,
       host: result.host,
       alive: result.alive,
-      time: result.time,
+      latency: latencyNum,
+      packetLoss: packetLossNum,
+      // checkedAt will be auto set by schema default
     });
 
-    // Return JSON response
+    // Prepare latency display value
+    const latencyDisplay = latencyNum === null ? "timed out" : latencyNum;
+
     return new Response(
       JSON.stringify({
         alive: result.alive,
         status: result.alive ? "up" : "down",
+        packetLoss: packetLossNum,
         ipAddress,
+        latency: latencyDisplay,
       }),
       {
         status: 200,
