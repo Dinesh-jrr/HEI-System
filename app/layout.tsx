@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "./components/Navbar";
+// import Navbar from "./components/Navbar";
 // import Header from "./components/Header";
 import { Toaster } from "sonner";
 
@@ -26,7 +26,7 @@ export default function RootLayout({
       <body
         className={`bg-green-500 ${inter.variable}  antialiased`}
       >
-        <Navbar></Navbar>
+        {/* <Navbar></Navbar> */}
         {children}
         <Toaster position="top-center" richColors duration={1000}/>
       </body>

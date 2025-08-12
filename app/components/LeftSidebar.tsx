@@ -57,13 +57,22 @@ export default function LeftSidebar() {
   }, [logs]);
 
   return (
-    <div className="w-[23%] text-white rounded-lg h-full flex flex-col items-center shadow-xl ">
-      <div className="flex justify-center items-center py-6">
+    <div className="w-[23%] text-white rounded-lg h-full flex flex-col items-center shadow-xl  ">
+      <div className="flex justify-start items-center py-6  w-full ml-2px ">
         <Image src="/logo.png" alt="logo" width={70} height={70} />
-        <p className="font-bold">Himalayan Everest Insurance</p>
+        <div className="flex flex-col items-center">
+            <p className="  text-blue-500 text-[14px]">Himalayan Everest</p>
+            <p className="text-[10px] text-blue-500">Insurance Limited</p>
+        </div>
       </div>
+      {/* <div className="w-full px-4 py-4 flex flex-col gap-3 overflow-y-auto  border-2 border-green-500 h-[400px]">
+          <div>
+            <h3>August 11,2025 4:56 AM </h3>
+          </div>
 
-      <div className="w-full px-4 py-4 flex flex-col gap-3 overflow-y-auto ">
+      </div> */}
+
+      <div className="w-full px-4 py-4 flex flex-col gap-3 overflow-y-auto  ">
         <h3 className="text-[#009acc] text-[25px]">Connection Logs</h3>
         <div
           ref={scrollRef}

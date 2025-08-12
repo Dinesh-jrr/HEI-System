@@ -55,15 +55,15 @@ export default function Home() {
     <div>
       {/* <Header onAddBranch={handleAddBranch} /> */}
 
-      <div className="flex  gap-1 h-[730px]">
-        <LeftSidebar></LeftSidebar>
-        <div className="flex-1 bg-black-100/80 p-4  space-y-6 overflow-auto">
-          <h2 className="text-[30px] text-white w-full text-center mt-2 text-bold">
+      <div className="flex  gap-5 h-[730px]">
+        {/* <LeftSidebar></LeftSidebar> */}
+        {/* <div className="flex-1 bg-black-100/80 p-4  space-y-6 overflow-auto"> */}
+          {/* <h2 className="text-[30px] text-white w-full text-center mt-2 text-bold">
             HEI NOC DASHBOARD
-          </h2>
-          <div className="h-600px w-full">
+          </h2> */}
+          <div className="h-600px w-full mt-[60px]">
               <MapComponent></MapComponent>
-          </div>
+          {/* </div> */}
           
         </div>
 

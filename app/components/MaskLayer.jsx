@@ -59,7 +59,7 @@ export default function MaskLayer({ L }) {
     const nepalOutlineLayer = new L.GeoJSON(nepalBoundary, {
       style: {
         color: "#00ffff",
-        weight: 0.8,
+        weight: 2,
         fillOpacity: 0,
       },
       interactive: false,

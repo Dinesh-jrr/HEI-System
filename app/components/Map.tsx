@@ -3,14 +3,15 @@ import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Branch } from "@/types";
 import MaskLayer from "../components/MaskLayer";
+import CyberPingAnimation from "./PingAnimation";
+import { Ping, LatLngExpression } from "@/types";
 
-
-const Tooltip = dynamic(() => import("react-leaflet").then((mod) => mod.Tooltip), { ssr: false });
-
-const CircleMarker = dynamic(
-  () => import("react-leaflet").then((m) => m.CircleMarker),
+const BranchMarker = dynamic(() => import("./BenchMarker"), { ssr: false });
+const Tooltip = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Tooltip),
   { ssr: false }
 );
+
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
   { ssr: false }
@@ -22,50 +23,37 @@ const TileLayer = dynamic(
 const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker), {
   ssr: false,
 });
-const Polyline = dynamic(
-  () => import("react-leaflet").then((m) => m.Polyline),
-  { ssr: false }
-);
+
 const GeoJSON = dynamic(() => import("react-leaflet").then((m) => m.GeoJSON), {
   ssr: false,
 });
 
-const sourceCoords: LatLngExpression = [27.7172,85.324]; 
+const sourceCoords: LatLngExpression = [27.7172, 85.324];
 
-type LatLngExpression = [number, number];
-type Ping = {
-  id: string;
-  from: LatLngExpression;
-  to: LatLngExpression;
-  progress: number;
-};
+
+
 
 function createSourceIcon(L: any) {
   return new L.DivIcon({
-    html: `<div style="
-      width: 14px; height: 14px; background: #09aacc; /* gold/yellow */
-      border-radius: 50%; box-shadow: 0 0 10px #09aacc; border: 2px solid white;">
-    </div>`,
+    html: `
+      <div style="
+        width: 30px; height: 30px; /* adjust size */
+        border-radius: 50%; 
+        overflow: hidden;
+        box-shadow: 0 0 10px #09aacc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <img 
+          src="/logo.png" 
+          alt="Logo" 
+          style="width: 24px; height: 24px; object-fit: contain;" 
+        />
+      </div>`,
     className: "",
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-  });
-}
-
-
-function createIcon(L: any, isUp: boolean) {
-  const color = isUp ? "rgba(0, 255, 0, 1)" : "rgba(255, 0, 0, 1)";
-  const glow = isUp
-    ? "0 0 18px rgba(0, 255, 0, 0.9)"
-    : "0 0 18px rgba(255, 0, 0, 0.9)";
-  return new L.DivIcon({
-    html: `<div style="
-      width: 10px; height: 10px; background: ${color};
-      border-radius: 50%; box-shadow: ${glow}; border: 2px solid white;">
-    </div>`,
-    className: "",
-    iconSize: [10, 10],
-    iconAnchor: [5, 5],
+    iconSize: [30, 30], // match div size
+    iconAnchor: [15, 15], // center the icon
   });
 }
 
@@ -94,8 +82,8 @@ const LeafletMap = React.memo(
   }) => (
     <MapContainer
       center={[28.3949, 84.124]} // Center of Nepal
-      zoom={7.5}
-      style={{ height: "600px", width: "100%", borderRadius: "3px" }}
+      zoom={12}
+      style={{ height: "100%", width: "100%", borderRadius: "3px" }}
       zoomControl={false}
       maxBounds={[
         [26.347, 80.058],
@@ -114,13 +102,9 @@ const LeafletMap = React.memo(
       wheelDebounceTime={100} // Debounce scroll zoom (prevents too fast)
       minZoom={7.5} // Prevent zooming too far out
       maxZoom={18}
-      // maxBounds={[
-      //   [26.347, 80.058], // SW corner of Nepal
-      //   [30.447, 88.201], // NE corner of Nepal
-      // ]}
     >
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
         noWrap={true}
       />
@@ -128,69 +112,29 @@ const LeafletMap = React.memo(
       <MaskLayer L={L}></MaskLayer>
 
       <Marker position={sourceCoords} icon={createSourceIcon(L)}>
-  <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent>
+        {/* <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent>
     <div className=" text-black font-semibold whitespace-nowrap">
       Main Server
     </div>
-  </Tooltip>
-</Marker>
+  </Tooltip> */}
+      </Marker>
 
-
-      {/* Branch markers */}
-      {branches.map(({ id, name, coords, status }) => (
-        <Marker
-          key={id}
-          position={coords}
-          icon={createIcon(L, status === "up")}
+      {branches.map((branch) => (
+        <BranchMarker
+          key={branch.id}
+          position={branch.coords}
+          name={branch.name}
+          status={branch.status}
         />
       ))}
 
-      {/* Animated pings */}
-      {pings.map((ping) => {
-        const currentPoint = interpolateCoords(
-          ping.from,
-          ping.to,
-          ping.progress
-        );
-
-        //Find the target branch
-        const targetBranch = branches.find(
-          (b) => b.coords[0] === ping.to[0] && b.coords[1] === ping.to[1]
-        );
-
-        //set color based on branch status
-        const color = targetBranch?.status === "up" ? "#09aacc" : "red";
-
-        return (
-          <React.Fragment key={ping.id}>
-      {/* Animated polyline */}
-      <Polyline
-        positions={[ping.from, currentPoint]}
-        pathOptions={{
-          color: color,
-          weight: 2,
-          opacity: 0.9,
-        }}
-      />
-
-      {/* Blinking circle at destination when progress >= 1 */}
-      {ping.progress >= 1 && (
-        <CircleMarker
-          center={ping.to}
-          radius={8}
-          pathOptions={{ color, fillColor: color, fillOpacity: 1 }}
-          className="blink"
-        />
-      )}
-    </React.Fragment>
-        );
-      })}
+      <CyberPingAnimation pings={pings} interpolateCoords={interpolateCoords} />
     </MapContainer>
   )
 );
 
 const MapComponent = () => {
-  const [branches,setBranches]=useState<Branch[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   // const [ping,setPing]=useState<Ping[]>([]);
   const [pings, setPings] = useState<Ping[]>([]);
   const [L, setLeaflet] = useState<any>(null);
@@ -206,83 +150,80 @@ const MapComponent = () => {
     })();
   }, []);
 
-//fetch the branches
-useEffect(() => {
-  async function fetchBranches() {
-    try {
-      const res = await fetch("http://localhost:3000/api/branch-status");
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Error response:", text);
-        throw new Error(`Failed to fetch branches, status: ${res.status}`);
-      }
-      const data = await res.json();
-      setBranches(data);
-    } catch (err) {
-      console.error("Fetch error:", err);
-    }
-  }
-
-  fetchBranches();
-}, []);
-
-
-  
-
- useEffect(() => {
-  if (branches.length === 0) return;
-
-  // fixed source location
-
-  const pingAllBranches = async () => {
-    for (const branch of branches) {
-      const pingId = `${branch.id}-${Date.now()}`;
-
-      // Start ping animation from source to branch
-      setPings((prev) => [
-        ...prev,
-        {
-          id: pingId,
-          from: sourceCoords,
-          to: branch.coords,
-          progress: 0,
-          status: "pending",
-        },
-      ]);
-
+  //fetch the branches
+  useEffect(() => {
+    async function fetchBranches() {
       try {
-        const res = await fetch("/api/ping", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ipAddress: branch.ipAddress }),
-        });
+        const res = await fetch("http://localhost:3000/api/branch-status");
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("Error response:", text);
+          throw new Error(`Failed to fetch branches, status: ${res.status}`);
+        }
         const data = await res.json();
-
-        // Update ping status and latency for animation
-        setPings((prev) =>
-          prev.map((p) =>
-            p.id === pingId ? { ...p, status: data.status, latency: data.latency } : p
-          )
-        );
-      } catch (error) {
-        setPings((prev) =>
-          prev.map((p) => (p.id === pingId ? { ...p, status: "down" } : p))
-        );
+        setBranches(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
       }
-
-      // Optional: Add a small delay between pings to stagger animations
-      await new Promise((resolve) => setTimeout(resolve, 5000000)); // 0.5 sec delay
     }
-  };
 
-  // Run immediately and then every 5 minutes
-  pingAllBranches();
-  const interval = setInterval(pingAllBranches, 350000); // 5 minutes
+    fetchBranches();
+  }, []);
 
-  return () => clearInterval(interval);
-}, [branches]);
+  useEffect(() => {
+    if (branches.length === 0) return;
 
+    // fixed source location
 
+    const pingAllBranches = async () => {
+      for (const branch of branches) {
+        const pingId = `${branch.id}-${Date.now()}`;
+
+        // Start ping animation from source to branch
+          setPings((prev) => [
+  ...prev,
+  {
+    id: pingId,
+    from: sourceCoords,
+    to: branch.coords,
+    progress: 0,
+    status: "up",
+  },
+]);
+
+        try {
+          const res = await fetch("/api/ping", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ipAddress: branch.ipAddress }),
+          });
+          const data = await res.json();
+
+          // Update ping status and latency for animation
+          setPings((prev) =>
+            prev.map((p) =>
+              p.id === pingId
+                ? { ...p, status: data.status, latency: data.latency }
+                : p
+            )
+          );
+        } catch (error) {
+          setPings((prev) =>
+            prev.map((p) => (p.id === pingId ? { ...p, status: "down" } : p))
+          );
+        }
+
+        // Optional: Add a small delay between pings to stagger animations
+        await new Promise((resolve) => setTimeout(resolve, 300000));
+      }
+    };
+
+    // Run immediately and then every 5 minutes
+    pingAllBranches();
+    const interval = setInterval(pingAllBranches, 350000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [branches]);
 
   // Animate pings
   useEffect(() => {
