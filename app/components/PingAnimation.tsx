@@ -18,7 +18,7 @@ const SimplePingAnimation: React.FC<SimplePingAnimationProps> = ({ pings, interp
         const currentPoint = interpolateCoords(ping.from, ping.to, ping.progress);
         console.log("The ping status in animation",ping.status);
 
-        const fillColor = ping.status === "up" ? "green" : ping.status === "down" ? "red" : "gray";
+        const fillColor = ping.status === "up" ? "green" : "red";
 
 
         return (

@@ -1,6 +1,8 @@
 import { connectDB } from "@/lib/mongodb";
 import Branch from "@/models/Branch";
+import PingResult from "@/models/result"; 
 import ping from "ping";
+
 
 export async function POST(req) {
   await connectDB();
@@ -17,13 +19,16 @@ export async function POST(req) {
 
   let status = "down";
   let responseTime = null;
+  let alive = false;
 
   try {
     const result = await ping.promise.probe(ipAddress, { timeout: 10, min_reply: 3 });
-    status = result.alive ? "up" : "down";
+    alive = result.alive;
+    status = alive ? "up" : "down";
     responseTime = result.time || null;
   } catch {
     status = "down";
+    alive = false;
   }
 
   // Create branch with status from ping
@@ -36,13 +41,20 @@ export async function POST(req) {
     status,
   });
 
+  // Add first ping history record
+  await PingResult.create({
+    branch: newBranch._id, // reference to the branch
+    ipAddress,
+    alive,
+    responseTime,
+    timestamp: new Date(),
+  });
 
   return new Response(
     JSON.stringify({ branch: newBranch }),
     { status: 201, headers: { "Content-Type": "application/json" } }
   );
 }
-
 
 
 // //get all branches

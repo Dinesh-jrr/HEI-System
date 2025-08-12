@@ -30,9 +30,6 @@ const GeoJSON = dynamic(() => import("react-leaflet").then((m) => m.GeoJSON), {
 
 const sourceCoords: LatLngExpression = [27.7172, 85.324];
 
-
-
-
 function createSourceIcon(L: any) {
   return new L.DivIcon({
     html: `
@@ -112,11 +109,7 @@ const LeafletMap = React.memo(
       <MaskLayer L={L}></MaskLayer>
 
       <Marker position={sourceCoords} icon={createSourceIcon(L)}>
-        {/* <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent>
-    <div className=" text-black font-semibold whitespace-nowrap">
-      Main Server
-    </div>
-  </Tooltip> */}
+
       </Marker>
 
       {branches.map((branch) => (
@@ -135,7 +128,6 @@ const LeafletMap = React.memo(
 
 const MapComponent = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
-  // const [ping,setPing]=useState<Ping[]>([]);
   const [pings, setPings] = useState<Ping[]>([]);
   const [L, setLeaflet] = useState<any>(null);
   const position: LatLngExpression = [28.3949, 84.124];
@@ -149,81 +141,75 @@ const MapComponent = () => {
       setLeaflet(leaflet);
     })();
   }, []);
+// 1. Fetch branches on mount or interval
+useEffect(() => {
+  async function fetchBranches() {
+    const res = await fetch("http://localhost:3000/api/branch-status");
+    const data = await res.json();
+    setBranches(data);
+  }
+  fetchBranches();
+  const interval = setInterval(fetchBranches, 10* 10* 1000); // every 5 minutes
+  return () => clearInterval(interval);
+}, []); // run once on mount
 
-  //fetch the branches
-  useEffect(() => {
-    async function fetchBranches() {
+// 2. Ping branches effect - runs once per branches change but does NOT update branches state
+useEffect(() => {
+  if (branches.length === 0) return;
+
+  let isCancelled = false;
+
+  const pingAllBranches = async () => {
+    for (const branch of branches) {
+      if (isCancelled) break;
+
+      const pingId = `${branch.id}-${Date.now()}`;
+
+      setPings((prev) => [
+        ...prev,
+        {
+          id: pingId,
+          from: sourceCoords,
+          to: branch.coords,
+          progress: 0,
+          status: branch.status,
+        },
+      ]);
+
       try {
-        const res = await fetch("http://localhost:3000/api/branch-status");
-        if (!res.ok) {
-          const text = await res.text();
-          console.error("Error response:", text);
-          throw new Error(`Failed to fetch branches, status: ${res.status}`);
-        }
+        const res = await fetch("/api/ping", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ipAddress: branch.ipAddress }),
+        });
         const data = await res.json();
-        setBranches(data);
-      } catch (err) {
-        console.error("Fetch error:", err);
+        const newStatus = data.status || "down";
+
+        setPings((prev) =>
+          prev.map((p) => (p.id === pingId ? { ...p, status: newStatus } : p))
+        );
+
+        // **IMPORTANT**: Don't update branches here to avoid re-triggering this effect
+        // Or consider a separate state for status updates
+      } catch (error) {
+        setPings((prev) =>
+          prev.map((p) => (p.id === pingId ? { ...p, status: "down" } : p))
+        );
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 5000000));
     }
+  };
 
-    fetchBranches();
-  }, []);
+  pingAllBranches();
 
-  useEffect(() => {
-    if (branches.length === 0) return;
+  return () => {
+    isCancelled = true;
+  };
+}, [branches]); // run only when branches change
 
-    // fixed source location
 
-    const pingAllBranches = async () => {
-      for (const branch of branches) {
-        const pingId = `${branch.id}-${Date.now()}`;
 
-        // Start ping animation from source to branch
-          setPings((prev) => [
-  ...prev,
-  {
-    id: pingId,
-    from: sourceCoords,
-    to: branch.coords,
-    progress: 0,
-    status: "up",
-  },
-]);
-
-        try {
-          const res = await fetch("/api/ping", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ipAddress: branch.ipAddress }),
-          });
-          const data = await res.json();
-
-          // Update ping status and latency for animation
-          setPings((prev) =>
-            prev.map((p) =>
-              p.id === pingId
-                ? { ...p, status: data.status, latency: data.latency }
-                : p
-            )
-          );
-        } catch (error) {
-          setPings((prev) =>
-            prev.map((p) => (p.id === pingId ? { ...p, status: "down" } : p))
-          );
-        }
-
-        // Optional: Add a small delay between pings to stagger animations
-        await new Promise((resolve) => setTimeout(resolve, 300000));
-      }
-    };
-
-    // Run immediately and then every 5 minutes
-    pingAllBranches();
-    const interval = setInterval(pingAllBranches, 350000); // 5 minutes
-
-    return () => clearInterval(interval);
-  }, [branches]);
 
   // Animate pings
   useEffect(() => {
