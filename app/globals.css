@@ -115,3 +115,9 @@ body::-webkit-scrollbar-track {
   
 }
 
+/* Remove tooltip arrow */
+.leaflet-tooltip:before,
+.leaflet-tooltip:after {
+  display: none !important;
+}
+
