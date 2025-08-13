@@ -16,7 +16,7 @@ const SimplePingAnimation: React.FC<SimplePingAnimationProps> = ({ pings, interp
     <>
       {pings.map(ping => {
         const currentPoint = interpolateCoords(ping.from, ping.to, ping.progress);
-        console.log("The ping status in animation",ping.status);
+        
 
         const fillColor = ping.status === "up" ? "green" : "red";
 
@@ -25,7 +25,7 @@ const SimplePingAnimation: React.FC<SimplePingAnimationProps> = ({ pings, interp
           <CircleMarker
             key={ping.id}
             center={currentPoint}
-            radius={4}
+            radius={8}
             pathOptions={{
               fillColor,
               color:fillColor,

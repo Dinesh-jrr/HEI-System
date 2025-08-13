@@ -5,6 +5,8 @@ import { Branch } from "@/types";
 import MaskLayer from "../components/MaskLayer";
 import CyberPingAnimation from "./PingAnimation";
 import { Ping, LatLngExpression } from "@/types";
+import ProvinceHighlight from "./ProvinceHighlight";
+import { toast } from "sonner";
 
 const BranchMarker = dynamic(() => import("./BenchMarker"), { ssr: false });
 const Tooltip = dynamic(
@@ -24,9 +26,7 @@ const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker), {
   ssr: false,
 });
 
-const GeoJSON = dynamic(() => import("react-leaflet").then((m) => m.GeoJSON), {
-  ssr: false,
-});
+
 
 const sourceCoords: LatLngExpression = [27.7172, 85.324];
 
@@ -111,7 +111,9 @@ const LeafletMap = React.memo(
       <Marker position={sourceCoords} icon={createSourceIcon(L)}>
 
       </Marker>
+     
 
+    <ProvinceHighlight branches={branches} downProvinces={[]} upProvinces={[]} />
       {branches.map((branch) => (
         <BranchMarker
           key={branch.id}
@@ -120,7 +122,6 @@ const LeafletMap = React.memo(
           status={branch.status}
         />
       ))}
-
       <CyberPingAnimation pings={pings} interpolateCoords={interpolateCoords} />
     </MapContainer>
   )
@@ -132,6 +133,8 @@ const MapComponent = () => {
   const [L, setLeaflet] = useState<any>(null);
   const position: LatLngExpression = [28.3949, 84.124];
   const [isClient, setIsClient] = useState(false);
+  const [pingedProvinces, setPingedProvinces] = useState<Set<string>>(new Set());
+
 
   // Load Leaflet
   useEffect(() => {
@@ -149,11 +152,9 @@ useEffect(() => {
     setBranches(data);
   }
   fetchBranches();
-  const interval = setInterval(fetchBranches, 10* 10* 1000); // every 5 minutes
+  const interval = setInterval(fetchBranches,  5*60* 1000); // every 5 minutes
   return () => clearInterval(interval);
-}, []); // run once on mount
-
-// 2. Ping branches effect - runs once per branches change but does NOT update branches state
+}, []); 
 useEffect(() => {
   if (branches.length === 0) return;
 
@@ -175,7 +176,6 @@ useEffect(() => {
           status: branch.status,
         },
       ]);
-
       try {
         const res = await fetch("/api/ping", {
           method: "POST",
@@ -183,11 +183,29 @@ useEffect(() => {
           body: JSON.stringify({ ipAddress: branch.ipAddress }),
         });
         const data = await res.json();
+        console.log(data);
         const newStatus = data.status || "down";
+        toast.success(`The branch ${branch.name} pinged as ${newStatus}`);
 
         setPings((prev) =>
           prev.map((p) => (p.id === pingId ? { ...p, status: newStatus } : p))
         );
+        const provinceCode = branch.provinceCode;
+if (!provinceCode) continue;  // Ignore branches without province code
+
+// Add to blinking set
+setPingedProvinces(prev => new Set(prev).add(provinceCode));
+
+// Remove from blinking after 3 seconds
+setTimeout(() => {
+  setPingedProvinces(prev => {
+    const copy = new Set(prev);
+    copy.delete(provinceCode);
+    return copy;
+  });
+}, 3000);
+
+        
 
         // **IMPORTANT**: Don't update branches here to avoid re-triggering this effect
         // Or consider a separate state for status updates
@@ -197,7 +215,7 @@ useEffect(() => {
         );
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 5000000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
   };
 

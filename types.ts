@@ -9,6 +9,7 @@ export type Branch = {
   history: { alive: boolean; checkedAt: string }[];
   pingHistory?: { alive: boolean }[]; 
   segments: { alive: boolean; checkedAt?: string }[];
+  provinceCode: string;
 };
 
 export type LatLngExpression = [number, number];
