@@ -6,14 +6,19 @@ interface BenchMarkerProps {
   position: [number, number];
   name: string;
   status: "up" | "down";
+  blink?:boolean;
 }
 
-const BranchMarker: FC<BenchMarkerProps> = ({ position, name, status }) => {
+const BranchMarker: FC<BenchMarkerProps> = ({ position, name, status,blink=false }) => {
   const isUp = status === "up";
-  const color = isUp ? "rgba(0, 255, 0, 1)" : "rgba(255, 0, 0, 1)";
-  const glow = isUp
-    ? "0 0 18px rgba(0, 255, 0, 0.9)"
-    : "0 0 18px rgba(255, 0, 0, 0.9)";
+   // Determine the color
+  const color = blink 
+    ? "yellow"                      // blinking color
+    : isUp 
+      ? "rgba(0, 255, 0, 1)"       // live/green
+      : "rgba(255, 0, 0, 1)";      // down/red
+
+  const glow = blink ? "0 0 25px yellow" : `0 0 18px ${color}`;
   const icon = new L.DivIcon({
     html: `<div style="
       width: 10px; height: 10px; background: ${color};

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Branch } from "@/types";
 import MaskLayer from "../components/MaskLayer";
@@ -7,6 +7,15 @@ import CyberPingAnimation from "./PingAnimation";
 import { Ping, LatLngExpression } from "@/types";
 import ProvinceHighlight from "./ProvinceHighlight";
 import { toast } from "sonner";
+
+// Map.tsx (top)
+import * as turf from "@turf/turf";
+import nepalBoundaryRaw from "../../data/nepal-states.json";
+import type { Feature, Polygon, MultiPolygon, FeatureCollection } from "geojson";
+
+// Cast raw JSON to proper type
+const nepalBoundary = nepalBoundaryRaw as FeatureCollection<Polygon | MultiPolygon>;
+
 
 const BranchMarker = dynamic(() => import("./BenchMarker"), { ssr: false });
 const Tooltip = dynamic(
@@ -71,11 +80,15 @@ const LeafletMap = React.memo(
     branches,
     pings,
     position,
+    pingedProvinces,
+    branchStatuses,
   }: {
     L: any;
     branches: Branch[];
     pings: Ping[];
     position: LatLngExpression;
+    pingedProvinces: Set<string>;
+    branchStatuses: { [id: number]: "up" | "down" };
   }) => (
     <MapContainer
       center={[28.3949, 84.124]} // Center of Nepal
@@ -96,8 +109,7 @@ const LeafletMap = React.memo(
       // touchZoom={true}           // Enable pinch-to-zoom
       zoomSnap={0.5} // Allows smoother zoom increments
       zoomDelta={0.5} // Smaller zoom jumps on +/- click
-      wheelDebounceTime={100} // Debounce scroll zoom (prevents too fast)
-      minZoom={7.5} // Prevent zooming too far out
+      wheelDebounceTime={100} 
       maxZoom={18}
     >
       <TileLayer
@@ -112,16 +124,40 @@ const LeafletMap = React.memo(
 
       </Marker>
      
+<ProvinceHighlight
+  branches={branches.map(branch => ({
+    ...branch,
+    status: branchStatuses[branch.id] || branch.status, // live status
+  }))}
+  blinkingProvinces={[...pingedProvinces]} // convert Set → array
+  upProvinces={branches
+    .filter(branch => (branchStatuses[branch.id] || branch.status) === "up")
+    .map(branch => branch.provinceCode)
+    .filter(Boolean) as string[]} // filter out undefined
+  downProvinces={branches
+    .filter(branch => (branchStatuses[branch.id] || branch.status) === "down")
+    .map(branch => branch.provinceCode)
+    .filter(Boolean) as string[]} // filter out undefined
+/>
 
-    <ProvinceHighlight branches={branches} downProvinces={[]} upProvinces={[]} />
-      {branches.map((branch) => (
-        <BranchMarker
-          key={branch.id}
-          position={branch.coords}
-          name={branch.name}
-          status={branch.status}
-        />
-      ))}
+      
+      {branches.map((branch) => {
+  // Find the latest ping for this branch by ID
+  const branchPing = pings.find((p) => p.branchId === branch.id);
+  const status = branchPing ? branchPing.status : branch.status;
+  console.log(status)
+  console.log(branchPing)
+
+  return (
+    <BranchMarker
+      key={branch.id}
+      position={branch.coords}
+      name={branch.branchName}
+      status={branchStatuses[branch.id] || branch.status}
+  blink={pingedProvinces.has(branch.provinceCode!)}
+    />
+  );
+})}
       <CyberPingAnimation pings={pings} interpolateCoords={interpolateCoords} />
     </MapContainer>
   )
@@ -134,6 +170,9 @@ const MapComponent = () => {
   const position: LatLngExpression = [28.3949, 84.124];
   const [isClient, setIsClient] = useState(false);
   const [pingedProvinces, setPingedProvinces] = useState<Set<string>>(new Set());
+  const hasPinged = useRef(false);
+  const [branchStatuses, setBranchStatuses] = useState<{ [id: string]: "up" | "down" }>({});
+
 
 
   // Load Leaflet
@@ -155,6 +194,9 @@ useEffect(() => {
   const interval = setInterval(fetchBranches,  5*60* 1000); // every 5 minutes
   return () => clearInterval(interval);
 }, []); 
+
+
+
 useEffect(() => {
   if (branches.length === 0) return;
 
@@ -166,16 +208,19 @@ useEffect(() => {
 
       const pingId = `${branch.id}-${Date.now()}`;
 
-      setPings((prev) => [
+      // Add a ping animation object
+      setPings(prev => [
         ...prev,
         {
           id: pingId,
+          branchId: branch.id,
           from: sourceCoords,
           to: branch.coords,
           progress: 0,
           status: branch.status,
         },
       ]);
+
       try {
         const res = await fetch("/api/ping", {
           method: "POST",
@@ -183,39 +228,59 @@ useEffect(() => {
           body: JSON.stringify({ ipAddress: branch.ipAddress }),
         });
         const data = await res.json();
-        console.log(data);
-        const newStatus = data.status || "down";
-        toast.success(`The branch ${branch.name} pinged as ${newStatus}`);
 
-        setPings((prev) =>
-          prev.map((p) => (p.id === pingId ? { ...p, status: newStatus } : p))
+        const newStatus: "up" | "down" = data.alive ? "up" : "down";
+
+        // Update branch live status
+        setBranchStatuses(prev => ({ ...prev, [branch.id]: newStatus }));
+
+        toast.success(`Branch ${branch.branchName} pinged as ${newStatus}`);
+
+        // Update ping object with the new status
+        setPings(prev =>
+          prev.map(p => (p.id === pingId ? { ...p, status: newStatus } : p))
         );
-        const provinceCode = branch.provinceCode;
-if (!provinceCode) continue;  // Ignore branches without province code
 
-// Add to blinking set
-setPingedProvinces(prev => new Set(prev).add(provinceCode));
+        // Determine province code
+        let provinceCode = branch.provinceCode;
+        if (!provinceCode) {
+          const point = turf.point([branch.coords[1], branch.coords[0]]);
+          const feature = nepalBoundary.features.find(
+            f => f?.geometry && turf.booleanPointInPolygon(point, f)
+          );
+          provinceCode = feature?.properties?.ADM1_PCODE?.trim().toUpperCase();
+        }
 
-// Remove from blinking after 3 seconds
-setTimeout(() => {
-  setPingedProvinces(prev => {
-    const copy = new Set(prev);
-    copy.delete(provinceCode);
-    return copy;
-  });
-}, 3000);
+        if (!provinceCode) continue; // skip if still undefined
 
-        
+        // Add to blinking provinces
+        setPingedProvinces(prev => {
+          const copy = new Set(prev);
+          copy.add(provinceCode!);
+          return copy;
+        });
 
-        // **IMPORTANT**: Don't update branches here to avoid re-triggering this effect
-        // Or consider a separate state for status updates
+        // Remove after 3 seconds
+        setTimeout(() => {
+          setPingedProvinces(prev => {
+            const copy = new Set(prev);
+            copy.delete(provinceCode!);
+            return copy;
+          });
+        }, 3000);
+
       } catch (error) {
-        setPings((prev) =>
-          prev.map((p) => (p.id === pingId ? { ...p, status: "down" } : p))
+        console.error("Ping failed for branch", branch.branchName, error);
+
+        // Mark as down if ping failed
+        setBranchStatuses(prev => ({ ...prev, [branch.id]: "down" }));
+        setPings(prev =>
+          prev.map(p => (p.id === pingId ? { ...p, status: "down" } : p))
         );
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Small delay between pings
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   };
 
@@ -224,7 +289,9 @@ setTimeout(() => {
   return () => {
     isCancelled = true;
   };
-}, [branches]); // run only when branches change
+}, [branches]);
+
+ // run only when branches change
 
 
 
@@ -243,7 +310,7 @@ setTimeout(() => {
 
   if (!L) return <div style={{ height: "600px" }}>Loading map...</div>;
   return (
-    <LeafletMap L={L} branches={branches} pings={pings} position={position} />
+    <LeafletMap L={L} branches={branches} pings={pings} position={position} pingedProvinces={pingedProvinces} branchStatuses={branchStatuses}/>
   );
 };
 

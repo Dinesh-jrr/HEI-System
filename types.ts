@@ -1,4 +1,7 @@
 export type Branch = {
+  latitude: number;
+  longitude: number;
+  branchName: string;
   lat: number;
   lng: number;
   id: number;
@@ -15,6 +18,7 @@ export type Branch = {
 export type LatLngExpression = [number, number];
 
 export interface Ping {
+  branchId: number;
   id: string;
   from: LatLngExpression;
   to: LatLngExpression;
