@@ -18,6 +18,7 @@ export type Branch = {
 export type LatLngExpression = [number, number];
 
 export interface Ping {
+  // angle: number;
   branchId: number;
   id: string;
   from: LatLngExpression;

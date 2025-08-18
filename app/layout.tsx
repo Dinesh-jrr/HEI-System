@@ -23,10 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`bg-green-500 ${inter.variable}  antialiased`}
-      >
-        {/* <Navbar></Navbar> */}
+      <body className={`min-h-screen bg-green-500 ${inter.variable} antialiased`}>
         {children}
         <Toaster position="top-center" richColors duration={1000}/>
       </body>

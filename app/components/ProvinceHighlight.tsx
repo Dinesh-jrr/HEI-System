@@ -88,10 +88,16 @@ const ProvinceHighlight: React.FC<ProvinceHighlightProps> = ({
   // Style function
   const style = (feature: any) => {
     const provinceCode = feature.properties?.ADM1_PCODE?.trim().toUpperCase() || "";
+    
 
-    if (downProvinces.includes(provinceCode)) {
-      return { color: "red", weight: 3, fillOpacity: 0.1 };
-    }
+//     if (downProvinces.includes(provinceCode)) {
+//   return {
+//     color: "red",      // border
+//     fillColor: "red",  // fill the province
+//     weight: 2,
+//     fillOpacity: 0.3,  // more solid
+//   };
+// }
 
     if (blinkingProvinces.map((c) => c.toUpperCase()).includes(provinceCode)) {
       
@@ -102,7 +108,7 @@ const ProvinceHighlight: React.FC<ProvinceHighlightProps> = ({
       return { color: "transparent", weight: 0.5, fillOpacity: 0.1 };
     }
 
-    return { color: "#09aacc", weight: 1, fillOpacity: 0.1 };
+    return { color: "#transparent", weight: 0.5, fillOpacity: 0.1 };
   };
 
   // Force style refresh on state change
@@ -111,7 +117,7 @@ const ProvinceHighlight: React.FC<ProvinceHighlightProps> = ({
       geoJsonRef.current.setStyle(style);
     }
   }, [blinkingProvinces, upProvinces, downProvinces, blinkOn]);
-  console.log("Blinking province:", blinkingProvinces, "blinkOn:", blinkOn);
+  // console.log("Blinking province:", blinkingProvinces, "blinkOn:", blinkOn);
 
   return <GeoJSON ref={geoJsonRef} data={nepalBoundary} style={style} />;
 };

@@ -36,7 +36,13 @@ const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker), {
 });
 
 
+// Animation settings
+const PROGRESS_INCREMENT = 0.05;  // how much progress per tick
+const TICK_INTERVAL = 100;        // ms per tick
+const BLINK_DURATION = 2000;      // ms of blinking after hit
 
+// Derived travel time (time for wave to go from source → branch)
+const travelTime = (1 / PROGRESS_INCREMENT) * TICK_INTERVAL;
 const sourceCoords: LatLngExpression = [27.7172, 85.324];
 
 function createSourceIcon(L: any) {
@@ -93,7 +99,7 @@ const LeafletMap = React.memo(
     <MapContainer
       center={[28.3949, 84.124]} // Center of Nepal
       zoom={12}
-      style={{ height: "100%", width: "100%", borderRadius: "3px" }}
+      style={{ height: "100%", width: "100%", borderRadius: "3px", borderColor:"green" }}
       zoomControl={false}
       maxBounds={[
         [26.347, 80.058],
@@ -107,7 +113,7 @@ const LeafletMap = React.memo(
       keyboard={false}
       attributionControl={false}
       // touchZoom={true}           // Enable pinch-to-zoom
-      zoomSnap={0.5} // Allows smoother zoom increments
+      zoomSnap={0.7} // Allows smoother zoom increments
       zoomDelta={0.5} // Smaller zoom jumps on +/- click
       wheelDebounceTime={100} 
       maxZoom={18}
@@ -124,7 +130,7 @@ const LeafletMap = React.memo(
 
       </Marker>
      
-<ProvinceHighlight
+{/* <ProvinceHighlight
   branches={branches.map(branch => ({
     ...branch,
     status: branchStatuses[branch.id] || branch.status, // live status
@@ -132,27 +138,42 @@ const LeafletMap = React.memo(
   blinkingProvinces={[...pingedProvinces]} // convert Set → array
   upProvinces={branches
     .filter(branch => (branchStatuses[branch.id] || branch.status) === "up")
-    .map(branch => branch.provinceCode)
-    .filter(Boolean) as string[]} // filter out undefined
+    .map(branch => {
+      if (branch.provinceCode) return branch.provinceCode;
+      const point = turf.point([branch.coords[1], branch.coords[0]]);
+      const feature = nepalBoundary.features.find(f =>
+        f?.geometry && turf.booleanPointInPolygon(point, f)
+      );
+      return feature?.properties?.ADM1_PCODE?.trim().toUpperCase();
+    })
+    .filter(Boolean) as string[]}
   downProvinces={branches
     .filter(branch => (branchStatuses[branch.id] || branch.status) === "down")
-    .map(branch => branch.provinceCode)
-    .filter(Boolean) as string[]} // filter out undefined
-/>
+    .map(branch => {
+      if (branch.provinceCode) return branch.provinceCode;
+      const point = turf.point([branch.coords[1], branch.coords[0]]);
+      const feature = nepalBoundary.features.find(f =>
+        f?.geometry && turf.booleanPointInPolygon(point, f)
+      );
+      return feature?.properties?.ADM1_PCODE?.trim().toUpperCase();
+    })
+    .filter(Boolean) as string[]}
+/> */}
+
 
       
       {branches.map((branch) => {
   // Find the latest ping for this branch by ID
   const branchPing = pings.find((p) => p.branchId === branch.id);
   const status = branchPing ? branchPing.status : branch.status;
-  console.log(status)
-  console.log(branchPing)
+  // console.log(status)
+  // console.log(branchPing)
 
   return (
     <BranchMarker
       key={branch.id}
       position={branch.coords}
-      name={branch.branchName}
+      name={branch.name}
       status={branchStatuses[branch.id] || branch.status}
   blink={pingedProvinces.has(branch.provinceCode!)}
     />
@@ -188,6 +209,7 @@ useEffect(() => {
   async function fetchBranches() {
     const res = await fetch("http://localhost:3000/api/branch-status");
     const data = await res.json();
+    console.log(data)
     setBranches(data);
   }
   fetchBranches();
@@ -198,7 +220,8 @@ useEffect(() => {
 
 
 useEffect(() => {
-  if (branches.length === 0) return;
+  if (!branches.length || hasPinged.current) return;
+  hasPinged.current = true;
 
   let isCancelled = false;
 
@@ -234,7 +257,22 @@ useEffect(() => {
         // Update branch live status
         setBranchStatuses(prev => ({ ...prev, [branch.id]: newStatus }));
 
-        toast.success(`Branch ${branch.branchName} pinged as ${newStatus}`);
+        // Example extra info
+const latency = data.latency; // e.g., in ms from API response
+const timestamp = new Date().toLocaleTimeString(); // current time
+
+if (newStatus === "up") {
+  toast.success(`${branch.name} is up`, {
+    description: `Latency: ${latency} ms\nTime: ${timestamp}`,
+    position: "top-right",
+  });
+} else {
+  toast.error(`${branch.name} is down`, {
+    description: `Latency: ${latency} ms\nTime: ${timestamp}\nCheck connectivity.`,
+    position: "top-right",
+    style: { border: "1px solid red", backgroundColor: "#ffe5e5", color: "#900" },
+  });
+}
 
         // Update ping object with the new status
         setPings(prev =>
@@ -250,27 +288,32 @@ useEffect(() => {
           );
           provinceCode = feature?.properties?.ADM1_PCODE?.trim().toUpperCase();
         }
+        console.log(provinceCode);
+        if (!provinceCode) continue; 
 
-        if (!provinceCode) continue; // skip if still undefined
+        // Wait for wave to reach branch before blinking
+setTimeout(() => {
+  setPingedProvinces(prev => {
+    const copy = new Set(prev);
+    copy.add(provinceCode!);
+    return copy;
+  });
 
-        // Add to blinking provinces
-        setPingedProvinces(prev => {
-          const copy = new Set(prev);
-          copy.add(provinceCode!);
-          return copy;
-        });
+  // Remove blink after duration
+  setTimeout(() => {
+    setPingedProvinces(prev => {
+      const copy = new Set(prev);
+      copy.delete(provinceCode!);
+      return copy;
+    });
+  }, BLINK_DURATION);
 
-        // Remove after 3 seconds
-        setTimeout(() => {
-          setPingedProvinces(prev => {
-            const copy = new Set(prev);
-            copy.delete(provinceCode!);
-            return copy;
-          });
-        }, 3000);
+}, travelTime); // dynamically calculated travel time
+
 
       } catch (error) {
-        console.error("Ping failed for branch", branch.branchName, error);
+        
+        console.error("Ping failed for branch", branch.name, error);
 
         // Mark as down if ping failed
         setBranchStatuses(prev => ({ ...prev, [branch.id]: "down" }));
@@ -280,7 +323,7 @@ useEffect(() => {
       }
 
       // Small delay between pings
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
   };
 
@@ -298,15 +341,16 @@ useEffect(() => {
 
   // Animate pings
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPings((prev) =>
-        prev
-          .map((p) => ({ ...p, progress: p.progress + 0.05 }))
-          .filter((p) => p.progress <= 1)
-      );
-    }, 110);
-    return () => clearInterval(interval);
-  }, []);
+  const interval = setInterval(() => {
+    setPings(prev =>
+      prev
+        .map(p => ({ ...p, progress: p.progress + PROGRESS_INCREMENT }))
+        .filter(p => p.progress <= 1)
+    );
+  }, TICK_INTERVAL);
+
+  return () => clearInterval(interval);
+}, []);
 
   if (!L) return <div style={{ height: "600px" }}>Loading map...</div>;
   return (

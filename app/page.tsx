@@ -1,9 +1,10 @@
 "use client";
 
-import Image from "next/image";
-// import Header from "./components/Header";
-
 import dynamic from "next/dynamic";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import ReactDOMServer from "react-dom/server";
+import MapComponent from "./components/Map";
+import { Toaster } from "sonner";
 
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
@@ -19,18 +20,6 @@ const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker), {
 const Popup = dynamic(() => import("react-leaflet").then((m) => m.Popup), {
   ssr: false,
 });
-
-// import L, { LatLngExpression } from "leaflet";
-// import "leaflet/dist/leaflet.css";
-import { useEffect, useState } from "react";
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
-import ReactDOMServer from "react-dom/server";
-import { toast } from "sonner";
-import LeftSidebar from "./components/LeftSidebar";
-import RightSide from "./components/RightSide";
-import { Branch } from "@/types";
-import MapComponent from "./components/Map";
-import RightSidebar from "./components/RightSide";
 
 function createIcon(L: any, isUp: boolean) {
   const iconElement = isUp ? (
@@ -52,24 +41,13 @@ function createIcon(L: any, isUp: boolean) {
 
 export default function Home() {
   return (
-    <div>
-      {/* <Header onAddBranch={handleAddBranch} /> */}
-
-      <div className="flex  gap-5 h-[730px]">
-        {/* <LeftSidebar></LeftSidebar> */}
-        {/* <div className="flex-1 bg-black-100/80 p-4  space-y-6 overflow-auto"> */}
-          {/* <h2 className="text-[30px] text-white w-full text-center mt-2 text-bold">
-            HEI NOC DASHBOARD
-          </h2> */}
-          <div className="h-600px w-full mt-[60px]">
-              <MapComponent></MapComponent>
-          {/* </div> */}
-          
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-1 flex flex-col p-4 gap-4">
+        {/* Responsive Map Container */}
+        <div className="w-full h-screen">
+          <MapComponent />
         </div>
-
-        {/* Right Side */}
-        {/* <RightSidebar></RightSidebar> */}
-      </div>
+      </main>
     </div>
   );
 }
