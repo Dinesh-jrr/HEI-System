@@ -29,7 +29,7 @@ const BranchMarker: FC<BenchMarkerProps> = ({
   // Create icon with name included
   const icon = new L.DivIcon({
     html: `
-      <div style="display: flex; flex-direction:column;  align-items: center; gap: 5px; width:30px">
+      <div style="display: flex; flex-direction:column; align-items: center; gap: 5px; width:20px">
         <div style="
           width: 10px; height: 10px;
           background: ${color};

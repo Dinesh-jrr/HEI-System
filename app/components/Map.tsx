@@ -264,12 +264,13 @@ const timestamp = new Date().toLocaleTimeString(); // current time
 if (newStatus === "up") {
   toast.success(`${branch.name} is up`, {
     description: `Latency: ${latency} ms\nTime: ${timestamp}`,
-    position: "top-right",
+    position: "top-center",
   });
 } else {
   toast.error(`${branch.name} is down`, {
     description: `Latency: ${latency} ms\nTime: ${timestamp}\nCheck connectivity.`,
     position: "top-right",
+    duration: Infinity,
     style: { border: "1px solid red", backgroundColor: "#ffe5e5", color: "#900" },
   });
 }
