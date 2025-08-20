@@ -220,8 +220,8 @@ useEffect(() => {
 
 
 useEffect(() => {
-  if (!branches.length || hasPinged.current) return;
-  hasPinged.current = true;
+  if (!branches.length) return;
+  // hasPinged.current = true;
 
   let isCancelled = false;
 
@@ -263,12 +263,12 @@ const timestamp = new Date().toLocaleTimeString(); // current time
 
 if (newStatus === "up") {
   toast.success(`${branch.name} is up`, {
-    description: `Latency: ${latency} ms\nTime: ${timestamp}`,
+    description: `Latency: ${latency} ms   \nTime: ${timestamp}`,
     position: "top-center",
   });
 } else {
   toast.error(`${branch.name} is down`, {
-    description: `Latency: ${latency} ms\nTime: ${timestamp}\nCheck connectivity.`,
+    description: `Latency: ${latency} ms || \nTime: ${timestamp}\nCheck connectivity.`,
     position: "top-right",
     duration: Infinity,
     style: { border: "1px solid red", backgroundColor: "#ffe5e5", color: "#900" },

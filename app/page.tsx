@@ -42,7 +42,7 @@ function createIcon(L: any, isUp: boolean) {
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
-      <main className="flex-1 flex flex-col p-4 gap-4">
+      <main className="flex-1 flex flex-col">
         {/* Responsive Map Container */}
         <div className="w-full h-screen">
           <MapComponent />
