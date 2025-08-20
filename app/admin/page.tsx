@@ -2,121 +2,49 @@
 
 import { Branch } from "@/types";
 import React, { useState } from "react";
-import Marquee from "react-fast-marquee";
 import { toast } from "sonner";
 
-type HeaderProps = {
-  onAddBranch: (branch: Branch) => void;
-};
-const Header = ({ onAddBranch }: HeaderProps) => {
+const Admin = () => {
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [ip, setIp] = useState("");
   const [location, setLocation] = useState("");
-  const [name,setName]=useState("");
-  const [latitude,setLatitude]=useState("");
-  const [longitude,setLongitude]=useState("");
-  const [ipAddress,setIpAdrress]=useState("");
-  const [response,setResponse]=useState(null);
-  const [error, setError]=useState(null);
-  const [speed, setSpeed] = useState(50);
-  const [branchStatuses, setBranchStatuses] = useState<Branch[]>([]);
-
-
-  const updates = [
-    "Ping sent to all users",
-    "Kathmandu map updated",
-    "New marker added in Pokhara",
-    "Server restarted successfully",
-    "User feedback received"
-  ];
-
-  
- 
-
+  const [name, setName] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
 
   const handleAddIp = async () => {
-  const latNum = Number(latitude);
-  const lngNum = Number(longitude);
+    const latNum = Number(latitude);
+    const lngNum = Number(longitude);
 
-  if (!ip || !name || !location || isNaN(latNum) || isNaN(lngNum)) {
-    toast.error("All fields are required and latitude/longitude must be valid numbers");
-    return;
-  }
-
-  try {
-    const res = await fetch("/api/branch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ipAddress: ip, branchName: name, location, latitude: latNum, longitude: lngNum }),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || "Something went wrong");
-      setResponse(null);
-      toast.error(data.error || "Failed to add IP");
-    } else {
-      setResponse(data);
-      setError(null);
-
-      // Second: Immediately ping the IP
-    const pingRes = await fetch("/api/ping", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ipAddress: data.ipAddress }),
-    });
-    const pingData = await pingRes.json();
-      const normalizedBranch: Branch = {
-          id: data._id || data.id,
-          name: data.branchName || name,
-          coords: [data.latitude || latNum, data.longitude || lngNum],
-          status: pingData.status || "down",
-          ipAddress: data.ipAddress || ip,
-          history: data.history || [],
-          latitude: 0,
-          longitude: 0,
-          branchName: "",
-          lat: 0,
-          lng: 0,
-          segments: [],
-          provinceCode: ""
-      };
-
-
-onAddBranch(normalizedBranch);
-toast.success("IP added successfully");
-
-setBranchStatuses(prev => [normalizedBranch, ...prev]);
-         
-      // Clear inputs
-      setIp("");
-      setName("");
-      setLocation("");
-      setLatitude("");
-      setLongitude("");
+    if (!ip || !name || !location || isNaN(latNum) || isNaN(lngNum)) {
+      toast.error("All fields are required and latitude/longitude must be valid numbers");
+      return;
     }
-  } catch (err) {
-    setError((err as any).message || "Fetch error");
-    toast.error((err as any).message || "Fetch error");
-  }
-};
 
+    try {
+      const res = await fetch("/api/branch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ipAddress: ip, branchName: name, location, latitude: latNum, longitude: lngNum }),
+      });
+      const data = await res.json();
 
-  const handlePing=()=>{
-    toast.success("All IP pings Successfully!");
+      if (!res.ok) {
+        toast.error(data.error || "Failed to add IP");
+      } else {
+        setBranches(prev => [data, ...prev]); // <-- store branch here
+        toast.success("IP added successfully");
+
+        setIp("");
+        setName("");
+        setLocation("");
+        setLatitude("");
+        setLongitude("");
+      }
+    } catch (err) {
+      toast.error((err as any).message || "Fetch error");
+    }
   };
-
-  const handleAutoPing=()=>{
-    toast.success("Auto IP started Successfully!");
-  }
-
-  const handleStopPing=()=>{
-      toast.success("IP stopped Successfully!");
-  }
-
-  const handleClearPing=()=>{
-      toast.success("All IP clear Successfully!");
-  }
-
    
   return (
     <header className="text-white mt-10 rounded-lg flex flex-col  gap-10 items-center justify-center">
@@ -164,12 +92,12 @@ setBranchStatuses(prev => [normalizedBranch, ...prev]);
 </button>
       </div>
       {/* Buttons for the pings */}
-    <div className="flex gap-10 justify-center items-center">
-    <button onClick={handlePing}className="border-2 bg-green-500 hover:bg-green-700 rounded px-4 py-2">Ping All</button>
-    <button onClick={handleAutoPing} className="border-2 bg-green-700 hover:bg-green-500 rounded px-4 py-2">Start Auto Ping(Every 5 mins)</button>
-    <button onClick={handleStopPing} className="border-2 bg-red-500 hover:bg-red-700 rounded px-4 py-2">Stop Auto Ping</button>
-    <button onClick={handleClearPing} className="border-2 bg-red-700 hover:bg-red-500 rounded px-4 py-2">Clear All IP</button>
-      </div>  
+    {/* <div className="flex gap-10 justify-center items-center"> */}
+    {/* <button onClick={handlePing}className="border-2 bg-green-500 hover:bg-green-700 rounded px-4 py-2">Ping All</button> */}
+    {/* <button onClick={handleAutoPing} className="border-2 bg-green-700 hover:bg-green-500 rounded px-4 py-2">Start Auto Ping(Every 5 mins)</button> */}
+    {/* <button onClick={handleStopPing} className="border-2 bg-red-500 hover:bg-red-700 rounded px-4 py-2">Stop Auto Ping</button> */}
+    {/* <button onClick={handleClearPing} className="border-2 bg-red-700 hover:bg-red-500 rounded px-4 py-2">Clear All IP</button> */}
+      {/* </div> */}
     
     {/* <div className="bg-green-700 text-white py-2">
       <Marquee pauseOnHover={true} speed={speed} gradient={false}>
@@ -184,4 +112,4 @@ setBranchStatuses(prev => [normalizedBranch, ...prev]);
   );
 };
 
-export default Header;
+export default Admin;
