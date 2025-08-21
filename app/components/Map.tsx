@@ -298,8 +298,8 @@ const MapComponent = () => {
 
             if (!retryIntervals[branch.id]) {
           retryIntervals[branch.id] = setInterval(() => {
-            pingAllBranches();
-            toast.success("The down branch is getting pinged again");
+            // pingAllBranches(branch.id);
+            
           }, 60 * 1000); // 1 minute
         }
           }
