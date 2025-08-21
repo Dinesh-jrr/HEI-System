@@ -196,13 +196,13 @@ const MapComponent = () => {
   const [L, setLeaflet] = useState<any>(null);
   const position: LatLngExpression = [28.3949, 84.124];
   const [isClient, setIsClient] = useState(false);
-  const [pingedProvinces, setPingedProvinces] = useState<Set<string>>(
-    new Set()
-  );
+  const [pingedProvinces, setPingedProvinces] = useState<Set<string>>(new Set());
   const hasPinged = useRef(false);
   const [branchStatuses, setBranchStatuses] = useState<{
     [id: string]: "up" | "down";
   }>({});
+  const retryIntervals: Record<string, NodeJS.Timeout> = {}; 
+    
 
   // Load Leaflet
   useEffect(() => {
@@ -230,7 +230,7 @@ const MapComponent = () => {
     // hasPinged.current = true;
 
     let isCancelled = false;
-    const retryIntervals: Record<string, NodeJS.Timeout> = {}; 
+    
 
     const pingAllBranches = async () => {
       for (const branch of branches) {
@@ -274,17 +274,15 @@ const MapComponent = () => {
               description: `Latency: ${latency} ms   \nTime: ${timestamp}`,
               position: "top-center",
             });
-                    // ✅ Stop retrying if it's back up
+
+         // ✅ Stop retrying if it's back up
         if (retryIntervals[branch.id]) {
           clearInterval(retryIntervals[branch.id]);
           delete retryIntervals[branch.id];
         }
 
           } else {
-            const audio = new Audio("/alert.mp3");
-  audio.play().catch((err) => {
-    console.error("Audio play failed:", err);
-  });
+
             toast.error(`${branch.name} is down`, {
               description: `Latency: ${latency} ms || \nTime: ${timestamp}\nCheck connectivity.`,
               position: "top-right",
@@ -295,6 +293,9 @@ const MapComponent = () => {
                 color: "#900",
               },
             });
+
+            
+
             if (!retryIntervals[branch.id]) {
           retryIntervals[branch.id] = setInterval(() => {
             pingAllBranches();
@@ -302,7 +303,7 @@ const MapComponent = () => {
           }, 60 * 1000); // 1 minute
         }
           }
-
+      
           
 
           // Update ping object with the new status
@@ -310,18 +311,7 @@ const MapComponent = () => {
             prev.map((p) => (p.id === pingId ? { ...p, status: newStatus } : p))
           );
 
-          // // Determine province code
-          // let provinceCode = branch.provinceCode;
-          // if (!provinceCode) {
-          //   const point = turf.point([branch.coords[1], branch.coords[0]]);
-          //   const feature = nepalBoundary.features.find(
-          //     (f) => f?.geometry && turf.booleanPointInPolygon(point, f)
-          //   );
-          //   provinceCode =
-          //     feature?.properties?.ADM1_PCODE?.trim().toUpperCase();
-          // }
-          // console.log(provinceCode);
-          // if (!provinceCode) continue;
+         
 
           // Wait for wave to reach branch before blinking
           setTimeout(() => {
