@@ -2,7 +2,7 @@ import { connectDB } from "@/lib/mongodb";
 import PingResult from "@/models/result";
 
 export async function GET() {
-  await connectDB();
+  await connectDB(); 
 
   const pingHistory = await PingResult.find({})
     .sort({ checkedAt: -1 })
